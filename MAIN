@@ -1,201 +1,142 @@
+// ==UserScript==
+// @name         Leia SP Hack - HUD Melhorada
+// @version      2.0
+// @description  HUD com watermark escura e menu estilizado
+// ==/UserScript==
+
 (function () {
-    let intervalId = null;
-    let features = {
-        pageTime: 60,
-        autorevive: true
-    };
+    "use strict";
 
-    function updateStatus(text, color = '#aaa') {
-        statusElement.innerHTML = `<span style="color:${color};font-weight:bold;text-shadow:0 0 6px ${color};">STATUS: ${text}</span>`;
+    // ======== Estilo CSS =========
+    const styles = `
+    /* Watermark */
+    #watermark {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: rgba(0,0,0,0.4);
+        color: cyan;
+        font-family: Arial, sans-serif;
+        font-size: 18px;
+        padding: 8px 14px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,255,255,0.4);
+        cursor: pointer;
+        z-index: 9999;
+        user-select: none;
+        transition: background 0.3s ease;
+    }
+    #watermark:hover {
+        background: rgba(0,0,0,0.6);
     }
 
-    function clickTarget() {
-        const target = document.querySelector('span[data-testid="bonsai-icon-caret-right"]');
-        if (target) target.click();
+    /* Menu */
+    #menu {
+        position: fixed;
+        top: 60px;
+        left: 20px;
+        background: rgba(20,20,20,0.85);
+        backdrop-filter: blur(8px);
+        border-radius: 14px;
+        padding: 15px;
+        display: none;
+        flex-direction: column;
+        gap: 12px;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        z-index: 9998;
+        min-width: 220px;
+        animation: fadeIn 0.2s ease;
     }
 
-    function startScript() {
-        stopScript();
-        intervalId = setInterval(() => {
-            if (features.autorevive || !document.hidden) clickTarget();
-        }, features.pageTime * 1000);
-        updateStatus('INICIADO', '#00ff99');
+    #menu label {
+        color: #fff;
+        font-size: 14px;
     }
 
-    function stopScript() {
-        if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-            updateStatus('PARADO', '#ff4d4d');
-        }
+    #menu input, #menu button {
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        font-size: 14px;
     }
 
-    const watermark = document.createElement('div');
-    const dropdownMenu = document.createElement('div');
-    const statusElement = document.createElement('div');
+    #menu input[type="number"], #menu input[type="text"] {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
 
-    // Estilo original da watermark (mantido)
-    Object.assign(watermark.style, {
-        position: 'fixed',
-        top: '10px',
-        left: '85%',
-        padding: '8px 16px',
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
-        borderRadius: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '1001',
-        cursor: 'pointer',
-        userSelect: 'none',
-        backdropFilter: 'blur(4px)'
-    });
-    watermark.innerHTML = `
-      <span style="
-        font-size: 20px;
+    #menu button {
+        background: linear-gradient(135deg, cyan, #00ffaa);
+        color: #000;
         font-weight: bold;
-        font-family: 'Segoe UI', sans-serif;
-        color: #80bfff;
-        text-shadow:
-          0 0 5px #80bfff,
-          0 0 10px #80bfff,
-          0 0 20px #1a75ff,
-          0 0 30px #1a75ff;
-      ">Leia SP Hack</span>
+        cursor: pointer;
+        transition: transform 0.2s ease;
+    }
+    #menu button:hover {
+        transform: scale(1.05);
+    }
+
+    /* Fade Animation */
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(-5px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
     `;
+    const styleSheet = document.createElement("style");
+    styleSheet.innerHTML = styles;
+    document.head.appendChild(styleSheet);
 
-    // Arrastar watermark
-    let isDragging = false, offsetX, offsetY;
-    watermark.addEventListener('mousedown', e => {
-        isDragging = true;
-        offsetX = e.clientX - watermark.offsetLeft;
-        offsetY = e.clientY - watermark.offsetTop;
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
-    document.addEventListener('mousemove', e => {
-        if (isDragging) {
-            let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth));
-            let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight));
-            Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` });
-        }
-    });
-
-    // Estilo melhorado do menu dropdown
-    Object.assign(dropdownMenu.style, {
-        position: 'absolute',
-        top: '100%',
-        left: '0',
-        width: '230px',
-        background: 'rgba(15, 15, 20, 0.85)',
-        borderRadius: '12px',
-        color: '#80bfff',
-        fontSize: '14px',
-        fontFamily: 'Segoe UI, sans-serif',
-        display: 'none',
-        flexDirection: 'column',
-        zIndex: '1000',
-        padding: '12px',
-        boxShadow: '0 0 15px rgba(128, 191, 255, 0.4)',
-        border: '1px solid #1a75ff',
-        backdropFilter: 'blur(10px)'
-    });
-
-    // Estilo interno com CSS injetado
-    dropdownMenu.innerHTML = `
-        <style>
-            ${dropdownMenu.tagName} label {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin: 4px 0;
-                color: #80bfff;
-                text-shadow: 0 0 4px #1a75ff;
-            }
-            ${dropdownMenu.tagName} input[type="number"] {
-                background: rgba(0,0,0,0.4);
-                border: 1px solid #1a75ff;
-                color: #80bfff;
-                padding: 4px;
-                border-radius: 6px;
-                width: 70px;
-                outline: none;
-                text-align: center;
-            }
-            ${dropdownMenu.tagName} input[type="checkbox"] {
-                appearance: none;
-                width: 16px;
-                height: 16px;
-                background-color: #111;
-                border: 1px solid #1a75ff;
-                border-radius: 3px;
-                cursor: pointer;
-                position: relative;
-            }
-            ${dropdownMenu.tagName} input[type="checkbox"]:checked {
-                background-color: #1a75ff;
-                box-shadow: 0 0 6px #80bfff;
-            }
-            ${dropdownMenu.tagName} button {
-                border: none;
-                padding: 6px;
-                border-radius: 6px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            ${dropdownMenu.tagName} #startBtn {
-                background: linear-gradient(45deg, #00ff99, #00cc88);
-                color: #000;
-            }
-            ${dropdownMenu.tagName} #stopBtn {
-                background: linear-gradient(45deg, #ff4d4d, #cc0000);
-                color: #fff;
-            }
-            ${dropdownMenu.tagName} button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 0 10px rgba(128, 191, 255, 0.4);
-            }
-        </style>
-        <label>Tempo por Página:
-            <input type="number" id="pageTime" value="${features.pageTime}">
-        </label>
-        <label>
-            <input type="checkbox" id="autorevive" ${features.autorevive ? 'checked' : ''}> Autorevive
-        </label>
-        <button id="startBtn">Iniciar</button>
-        <button id="stopBtn">Parar</button>
-    `;
-
-    statusElement.style.marginTop = '8px';
-    statusElement.style.fontSize = '12px';
-    statusElement.style.textAlign = 'center';
-    updateStatus('NaN');
-
-    dropdownMenu.appendChild(statusElement);
-    watermark.appendChild(dropdownMenu);
+    // ======== HTML =========
+    const watermark = document.createElement("div");
+    watermark.id = "watermark";
+    watermark.textContent = "Leia SP Hack";
     document.body.appendChild(watermark);
 
-    // Abrir/fechar menu
-    watermark.addEventListener('click', (e) => {
-        if (e.target.tagName === 'SPAN' || e.target === watermark) {
-            dropdownMenu.style.display = dropdownMenu.style.display === 'flex' ? 'none' : 'flex';
+    const menu = document.createElement("div");
+    menu.id = "menu";
+    document.body.appendChild(menu);
+
+    // ======== Funções =========
+    function addFeature(label, type, callback) {
+        const wrapper = document.createElement("div");
+        const lbl = document.createElement("label");
+        lbl.textContent = label;
+        wrapper.appendChild(lbl);
+
+        let el;
+        if (type === "button") {
+            el = document.createElement("button");
+            el.textContent = label;
+            el.onclick = callback;
+            wrapper.appendChild(el);
+        } else if (type === "checkbox") {
+            el = document.createElement("input");
+            el.type = "checkbox";
+            el.onchange = callback;
+            wrapper.appendChild(el);
+        } else if (type === "number") {
+            el = document.createElement("input");
+            el.type = "number";
+            el.oninput = callback;
+            wrapper.appendChild(el);
         }
+        menu.appendChild(wrapper);
+        return el;
+    }
+
+    // ======== Lógica ========
+    let tempoPagina = 2;
+    let autorevive = false;
+
+    addFeature("Tempo por página (s)", "number", e => tempoPagina = parseInt(e.target.value) || 2);
+    addFeature("Autorevive", "checkbox", e => autorevive = e.target.checked);
+    addFeature("Iniciar", "button", () => alert(`Iniciado com ${tempoPagina}s por página`));
+    addFeature("Parar", "button", () => alert("Parado"));
+
+    // ======== Eventos ========
+    watermark.addEventListener("click", () => {
+        menu.style.display = menu.style.display === "flex" ? "none" : "flex";
     });
 
-    // Eventos dos inputs
-    dropdownMenu.querySelector('#pageTime').addEventListener('input', e => {
-        features.pageTime = parseInt(e.target.value) || 1;
-    });
-    dropdownMenu.querySelector('#autorevive').addEventListener('change', e => {
-        features.autorevive = e.target.checked;
-    });
-    dropdownMenu.querySelector('#startBtn').addEventListener('click', startScript);
-    dropdownMenu.querySelector('#stopBtn').addEventListener('click', stopScript);
-
-    document.addEventListener('visibilitychange', () => {
-        if (!features.autorevive && intervalId) {
-            if (document.hidden) stopScript();
-            else startScript();
-        }
-    });
 })();
