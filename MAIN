@@ -1,14 +1,12 @@
 (function () {
-    // ===== CONFIG PRINCIPAL =====
     let intervalId = null;
     let features = {
         pageTime: 60,
         autorevive: true
     };
 
-    // ===== FUNÇÕES DE AÇÃO =====
     function updateStatus(text, color = '#aaa') {
-        statusElement.innerHTML = `<span style="color:${color};font-weight:bold;">STATUS: ${text}</span>`;
+        statusElement.innerHTML = `<span style="color:${color};font-weight:bold;text-shadow:0 0 6px ${color};">STATUS: ${text}</span>`;
     }
 
     function clickTarget() {
@@ -32,12 +30,11 @@
         }
     }
 
-    // ===== ELEMENTOS HUD =====
     const watermark = document.createElement('div');
     const dropdownMenu = document.createElement('div');
     const statusElement = document.createElement('div');
 
-    // Estilo watermark
+    // Estilo original da watermark (mantido)
     Object.assign(watermark.style, {
         position: 'fixed',
         top: '10px',
@@ -53,7 +50,6 @@
         userSelect: 'none',
         backdropFilter: 'blur(4px)'
     });
-
     watermark.innerHTML = `
       <span style="
         font-size: 20px;
@@ -84,36 +80,90 @@
         }
     });
 
-    // Estilo menu dropdown
+    // Estilo melhorado do menu dropdown
     Object.assign(dropdownMenu.style, {
         position: 'absolute',
         top: '100%',
         left: '0',
-        width: '220px',
-        backgroundColor: '#0b0b0d',
-        borderRadius: '8px',
+        width: '230px',
+        background: 'rgba(15, 15, 20, 0.85)',
+        borderRadius: '12px',
         color: '#80bfff',
         fontSize: '14px',
         fontFamily: 'Segoe UI, sans-serif',
         display: 'none',
         flexDirection: 'column',
         zIndex: '1000',
-        padding: '10px',
-        boxShadow: '0 0 10px rgba(128, 191, 255, 0.3)',
+        padding: '12px',
+        boxShadow: '0 0 15px rgba(128, 191, 255, 0.4)',
         border: '1px solid #1a75ff',
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(10px)'
     });
 
-    // HTML do menu
+    // Estilo interno com CSS injetado
     dropdownMenu.innerHTML = `
+        <style>
+            ${dropdownMenu.tagName} label {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin: 4px 0;
+                color: #80bfff;
+                text-shadow: 0 0 4px #1a75ff;
+            }
+            ${dropdownMenu.tagName} input[type="number"] {
+                background: rgba(0,0,0,0.4);
+                border: 1px solid #1a75ff;
+                color: #80bfff;
+                padding: 4px;
+                border-radius: 6px;
+                width: 70px;
+                outline: none;
+                text-align: center;
+            }
+            ${dropdownMenu.tagName} input[type="checkbox"] {
+                appearance: none;
+                width: 16px;
+                height: 16px;
+                background-color: #111;
+                border: 1px solid #1a75ff;
+                border-radius: 3px;
+                cursor: pointer;
+                position: relative;
+            }
+            ${dropdownMenu.tagName} input[type="checkbox"]:checked {
+                background-color: #1a75ff;
+                box-shadow: 0 0 6px #80bfff;
+            }
+            ${dropdownMenu.tagName} button {
+                border: none;
+                padding: 6px;
+                border-radius: 6px;
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+            ${dropdownMenu.tagName} #startBtn {
+                background: linear-gradient(45deg, #00ff99, #00cc88);
+                color: #000;
+            }
+            ${dropdownMenu.tagName} #stopBtn {
+                background: linear-gradient(45deg, #ff4d4d, #cc0000);
+                color: #fff;
+            }
+            ${dropdownMenu.tagName} button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 0 10px rgba(128, 191, 255, 0.4);
+            }
+        </style>
         <label>Tempo por Página:
-            <input type="number" id="pageTime" value="${features.pageTime}" style="width:60px;">
+            <input type="number" id="pageTime" value="${features.pageTime}">
         </label>
-        <label style="margin-top:5px;">
+        <label>
             <input type="checkbox" id="autorevive" ${features.autorevive ? 'checked' : ''}> Autorevive
         </label>
-        <button id="startBtn" style="margin-top:8px;background:#00ff99;color:black;border:none;padding:5px;border-radius:4px;cursor:pointer;">Iniciar</button>
-        <button id="stopBtn" style="margin-top:5px;background:#ff4d4d;color:white;border:none;padding:5px;border-radius:4px;cursor:pointer;">Parar</button>
+        <button id="startBtn">Iniciar</button>
+        <button id="stopBtn">Parar</button>
     `;
 
     statusElement.style.marginTop = '8px';
@@ -136,15 +186,12 @@
     dropdownMenu.querySelector('#pageTime').addEventListener('input', e => {
         features.pageTime = parseInt(e.target.value) || 1;
     });
-
     dropdownMenu.querySelector('#autorevive').addEventListener('change', e => {
         features.autorevive = e.target.checked;
     });
-
     dropdownMenu.querySelector('#startBtn').addEventListener('click', startScript);
     dropdownMenu.querySelector('#stopBtn').addEventListener('click', stopScript);
 
-    // Controle de visibilidade (para parar se não for autorevive)
     document.addEventListener('visibilitychange', () => {
         if (!features.autorevive && intervalId) {
             if (document.hidden) stopScript();
