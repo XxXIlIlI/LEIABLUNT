@@ -34,7 +34,7 @@
     const dropdownMenu = document.createElement('div');
     const statusElement = document.createElement('div');
 
-    // Estilo original da watermark (mantido)
+    // Estilo original da watermark
     Object.assign(watermark.style, {
         position: 'fixed',
         top: '10px',
@@ -65,22 +65,24 @@
     `;
 
     // Arrastar watermark
-    let isDragging = false, offsetX, offsetY;
+    let isDragging = false, offsetX, offsetY, dragMoved = false;
     watermark.addEventListener('mousedown', e => {
         isDragging = true;
+        dragMoved = false;
         offsetX = e.clientX - watermark.offsetLeft;
         offsetY = e.clientY - watermark.offsetTop;
     });
     document.addEventListener('mouseup', () => isDragging = false);
     document.addEventListener('mousemove', e => {
         if (isDragging) {
+            dragMoved = true;
             let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth));
             let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight));
             Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` });
         }
     });
 
-    // Estilo melhorado do menu dropdown
+    // Estilo do menu dropdown
     Object.assign(dropdownMenu.style, {
         position: 'absolute',
         top: '100%',
@@ -100,7 +102,6 @@
         backdropFilter: 'blur(10px)'
     });
 
-    // Estilo interno com CSS injetado
     dropdownMenu.innerHTML = `
         <style>
             ${dropdownMenu.tagName} label {
@@ -175,8 +176,9 @@
     watermark.appendChild(dropdownMenu);
     document.body.appendChild(watermark);
 
-    // Abrir/fechar menu
+    // Abrir/fechar menu apenas se não arrastou
     watermark.addEventListener('click', (e) => {
+        if (dragMoved) return;
         if (e.target.tagName === 'SPAN' || e.target === watermark) {
             dropdownMenu.style.display = dropdownMenu.style.display === 'flex' ? 'none' : 'flex';
         }
