@@ -1,203 +1,155 @@
-(function () {
-    let intervalId = null;
-    let features = {
-        pageTime: 60,
-        autorevive: true
-    };
+// Função para criar e mostrar uma notificação no canto superior direito
+function showPageNotification(message) {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    
+    // Estilizar a notificação
+    notification.style.position = 'fixed';
+    notification.style.top = '20px';
+    notification.style.right = '20px';
+    notification.style.backgroundColor = '#4CAF50';
+    notification.style.color = 'white';
+    notification.style.padding = '12px 20px';
+    notification.style.borderRadius = '8px';
+    notification.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.2)';
+    notification.style.zIndex = '9999';
+    notification.style.opacity = '0';
+    notification.style.transition = 'opacity 0.3s ease-in-out';
+    notification.style.fontFamily = 'Arial, sans-serif';
+    notification.style.fontSize = '14px';
+    notification.style.fontWeight = 'bold';
+    notification.style.display = 'flex';
+    notification.style.alignItems = 'center';
+    notification.style.justifyContent = 'center';
+    
+    // Ícone para a notificação
+    const icon = document.createElement('div');
+    icon.innerHTML = '📄';
+    icon.style.marginRight = '10px';
+    icon.style.fontSize = '18px';
+    
+    // Texto da notificação
+    const text = document.createElement('div');
+    text.textContent = message;
+    
+    // Montar a notificação
+    notification.appendChild(icon);
+    notification.appendChild(text);
+    
+    // Adicionar ao corpo do documento
+    document.body.appendChild(notification);
+    
+    // Exibir a notificação com animação
+    setTimeout(() => {
+        notification.style.opacity = '1';
+    }, 100);
+    
+    // Remover após 3 segundos
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.remove();
+        }, 300);
+    }, 3000);
+}
 
-    function updateStatus(text, color = '#aaa') {
-        statusElement.innerHTML = `<span style="color:${color};font-weight:bold;text-shadow:0 0 6px ${color};">STATUS: ${text}</span>`;
-    }
-
-    function clickTarget() {
-        const target = document.querySelector('span[data-testid="bonsai-icon-caret-right"]');
-        if (target) target.click();
-    }
-
-    function startScript() {
-        stopScript();
-        intervalId = setInterval(() => {
-            if (features.autorevive || !document.hidden) clickTarget();
-        }, features.pageTime * 1000);
-        updateStatus('INICIADO', '#00ff99');
-    }
-
-    function stopScript() {
-        if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-            updateStatus('PARADO', '#ff4d4d');
+// Função para clicar no botão de próxima página
+function clickNextPageButton() {
+    // Obter informação da página atual
+    const pageInfoElement = document.querySelector('div.sc-dicizt.jpZPHL span.sc-jRsXiD.jyuMzT');
+    const pageText = pageInfoElement ? pageInfoElement.textContent : 'desconhecido';
+    
+    // Mostrar notificação com a página atual
+    showPageNotification(`Avançando: Página ${pageText}`);
+    
+    // Tentar vários seletores possíveis para o botão "próxima página"
+    const nextPageSelectors = [
+        // Botão no caminho XPath fornecido anteriormente
+        "/html/body/div[7]/main/div[2]/div[3]/button/span",
+        // Botões comuns de "próximo" ou "avançar"
+        "button.next-page", 
+        "button.next", 
+        "a.next-page", 
+        "a.next",
+        // Botão que pode conter texto como "Próximo" ou "Avançar" ou seta
+        "button:contains('Próximo')", 
+        "button:contains('Avançar')",
+        "button:contains('→')",
+        // Outros seletores comuns
+        ".pagination-next", 
+        ".page-next",
+        // Último botão em uma navegação de paginação
+        ".pagination button:last-child",
+        ".pagination a:last-child"
+    ];
+    
+    // Tentar encontrar o botão usando os seletores
+    let buttonFound = false;
+    
+    // Tentar primeiro com seletores CSS
+    for (const selector of nextPageSelectors) {
+        if (selector.startsWith("/")) {
+            // É um XPath
+            const button = document.evaluate(
+                selector,
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null
+            ).singleNodeValue;
+            
+            if (button) {
+                button.click();
+                buttonFound = true;
+                console.log("Clicado no botão usando XPath:", selector);
+                break;
+            }
+        } else {
+            // É um seletor CSS
+            try {
+                const button = document.querySelector(selector);
+                if (button) {
+                    button.click();
+                    buttonFound = true;
+                    console.log("Clicado no botão usando seletor:", selector);
+                    break;
+                }
+            } catch (e) {
+                // Alguns seletores personalizados como :contains podem não ser suportados
+                console.log("Erro ao tentar seletor:", selector, e);
+            }
         }
     }
-
-    const watermark = document.createElement('div');
-    const dropdownMenu = document.createElement('div');
-    const statusElement = document.createElement('div');
-
-    // Estilo original da watermark
-    Object.assign(watermark.style, {
-        position: 'fixed',
-        top: '10px',
-        left: '85%',
-        padding: '8px 16px',
-        backgroundColor: 'rgba(0, 0, 0, 0.9)',
-        borderRadius: '12px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: '1001',
-        cursor: 'pointer',
-        userSelect: 'none',
-        backdropFilter: 'blur(4px)'
-    });
-    watermark.innerHTML = `
-      <span style="
-        font-size: 20px;
-        font-weight: bold;
-        font-family: 'Segoe UI', sans-serif;
-        color: #80bfff;
-        text-shadow:
-          0 0 5px #80bfff,
-          0 0 10px #80bfff,
-          0 0 20px #1a75ff,
-          0 0 30px #1a75ff;
-      ">Leia SP Hack</span>
-    `;
-
-    // Arrastar watermark
-    let isDragging = false, offsetX, offsetY, dragMoved = false;
-    watermark.addEventListener('mousedown', e => {
-        isDragging = true;
-        dragMoved = false;
-        offsetX = e.clientX - watermark.offsetLeft;
-        offsetY = e.clientY - watermark.offsetTop;
-    });
-    document.addEventListener('mouseup', () => isDragging = false);
-    document.addEventListener('mousemove', e => {
-        if (isDragging) {
-            dragMoved = true;
-            let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth));
-            let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight));
-            Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` });
+    
+    // Tentar encontrar por texto ou ícone se nenhum seletor funcionou
+    if (!buttonFound) {
+        const allButtons = document.querySelectorAll('button, a.button, input[type="button"], input[type="submit"]');
+        for (const button of allButtons) {
+            const buttonText = button.textContent.toLowerCase();
+            if (buttonText.includes('próximo') || buttonText.includes('próxima') || 
+                buttonText.includes('avançar') || buttonText.includes('next') ||
+                buttonText.includes('→') || buttonText.includes('>')) {
+                button.click();
+                buttonFound = true;
+                console.log("Clicado no botão pelo texto:", buttonText);
+                break;
+            }
         }
-    });
+    }
+    
+    if (!buttonFound) {
+        showPageNotification("Não foi possível encontrar o botão de próxima página");
+        console.error("Não foi possível encontrar nenhum botão de próxima página");
+    }
+}
 
-    // Estilo do menu dropdown
-    Object.assign(dropdownMenu.style, {
-        position: 'absolute',
-        top: '100%',
-        left: '0',
-        width: '230px',
-        background: 'rgba(15, 15, 20, 0.85)',
-        borderRadius: '12px',
-        color: '#80bfff',
-        fontSize: '14px',
-        fontFamily: 'Segoe UI, sans-serif',
-        display: 'none',
-        flexDirection: 'column',
-        zIndex: '1000',
-        padding: '12px',
-        boxShadow: '0 0 15px rgba(128, 191, 255, 0.4)',
-        border: '1px solid #1a75ff',
-        backdropFilter: 'blur(10px)'
-    });
+// Executar a função para clicar e mostrar a notificação
+clickNextPageButton();
 
-    dropdownMenu.innerHTML = `
-        <style>
-            ${dropdownMenu.tagName} label {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                margin: 4px 0;
-                color: #80bfff;
-                text-shadow: 0 0 4px #1a75ff;
-            }
-            ${dropdownMenu.tagName} input[type="number"] {
-                background: rgba(0,0,0,0.4);
-                border: 1px solid #1a75ff;
-                color: #80bfff;
-                padding: 4px;
-                border-radius: 6px;
-                width: 70px;
-                outline: none;
-                text-align: center;
-            }
-            ${dropdownMenu.tagName} input[type="checkbox"] {
-                appearance: none;
-                width: 16px;
-                height: 16px;
-                background-color: #111;
-                border: 1px solid #1a75ff;
-                border-radius: 3px;
-                cursor: pointer;
-                position: relative;
-            }
-            ${dropdownMenu.tagName} input[type="checkbox"]:checked {
-                background-color: #1a75ff;
-                box-shadow: 0 0 6px #80bfff;
-            }
-            ${dropdownMenu.tagName} button {
-                border: none;
-                padding: 6px;
-                border-radius: 6px;
-                font-weight: bold;
-                cursor: pointer;
-                transition: all 0.2s;
-            }
-            ${dropdownMenu.tagName} #startBtn {
-                background: linear-gradient(45deg, #00ff99, #00cc88);
-                color: #000;
-            }
-            ${dropdownMenu.tagName} #stopBtn {
-                background: linear-gradient(45deg, #ff4d4d, #cc0000);
-                color: #fff;
-            }
-            ${dropdownMenu.tagName} button:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 0 10px rgba(128, 191, 255, 0.4);
-            }
-        </style>
-        <label>Tempo por Página:
-            <input type="number" id="pageTime" value="${features.pageTime}">
-        </label>
-        <label>
-            <input type="checkbox" id="autorevive" ${features.autorevive ? 'checked' : ''}> Autorevive
-        </label>
-        <button id="startBtn">Iniciar</button>
-        <button id="stopBtn">Parar</button>
-    `;
+// Configurar para avançar automaticamente a cada 3 segundos
+const intervalId = setInterval(clickNextPageButton, 3000);
 
-    statusElement.style.marginTop = '8px';
-    statusElement.style.fontSize = '12px';
-    statusElement.style.textAlign = 'center';
-    updateStatus('NaN');
+// Para parar o script (adicionar no console quando quiser parar):
+// clearInterval(intervalId);
 
-    dropdownMenu.appendChild(statusElement);
-    watermark.appendChild(dropdownMenu);
-    document.body.appendChild(watermark);
-
-    // Abrir/fechar menu apenas se não arrastou
-    watermark.addEventListener('click', (e) => {
-        if (dragMoved) return;
-        if (e.target.tagName === 'SPAN' || e.target === watermark) {
-            dropdownMenu.style.display = dropdownMenu.style.display === 'flex' ? 'none' : 'flex';
-        }
-    });
-
-    // Eventos dos inputs
-    dropdownMenu.querySelector('#pageTime').addEventListener('input', e => {
-        features.pageTime = parseInt(e.target.value) || 1;
-    });
-    dropdownMenu.querySelector('#autorevive').addEventListener('change', e => {
-        features.autorevive = e.target.checked;
-    });
-    dropdownMenu.querySelector('#startBtn').addEventListener('click', startScript);
-    dropdownMenu.querySelector('#stopBtn').addEventListener('click', stopScript);
-
-    document.addEventListener('visibilitychange', () => {
-        if (!features.autorevive && intervalId) {
-            if (document.hidden) stopScript();
-            else startScript();
-        }
-    });
-})();
+console.log("Script de paginação automática iniciado. Execute clearInterval(intervalId) para parar.");
